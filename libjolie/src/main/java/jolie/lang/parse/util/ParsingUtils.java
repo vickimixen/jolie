@@ -111,13 +111,13 @@ public class ParsingUtils {
 	 * @param definedConstants
 	 * @param semanticConfiguration
 	 * @param includeDocumentation
-	 * @return the SemanticVerifier
+	 * @return the ModuleParsedResult
 	 * @throws IOException
 	 * @throws ParserException
 	 * @throws CodeCheckException
 	 * @throws ModuleException
 	 */
-	public static SemanticVerifier parseProgramModule(
+	public static ModuleParsedResult parseProgramModule(
 		InputStream inputStream,
 		URI source,
 		String charset,
@@ -140,7 +140,7 @@ public class ParsingUtils {
 		SemanticVerifier semanticVerifier = new SemanticVerifier( parseResult.mainProgram(),
 			parseResult.symbolTables(), semanticConfiguration );
 		semanticVerifier.validate();
-		return semanticVerifier;
+		return parseResult;
 	}
 
 	/**

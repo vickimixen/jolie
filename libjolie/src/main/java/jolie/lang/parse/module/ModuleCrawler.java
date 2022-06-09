@@ -110,16 +110,13 @@ class ModuleCrawler {
 				importedSymbol.setModuleSource( moduleSource );
 				modulesToCrawl.add( moduleSource );
 			} catch( ModuleNotFoundException e ) {
-				// Add the importpath and name to the line of code, as the rest of the line cannot be gotten from
-				// the context, since the getContextDuringError cannot be used in here, and the context is not
-				// updated after the error is found.
+				// fix the column number
 				String codeLine = importedSymbol.context().enclosingCode().get( 0 ).replace( "\n", "" );
-				String CodeLineWithPath = codeLine + importedSymbol.importPath() + " import " + importedSymbol.name();
-				int column = codeLine.length();
+				int column = codeLine.split( " " )[ 0 ].length() + 1;
 				ParsingContext context = new URIParsingContext( importedSymbol.context().source(),
 					importedSymbol.context().endLine(), importedSymbol.context().endLine(), column,
 					column + e.importPath().toString().length(),
-					List.of( CodeLineWithPath ) );
+					List.of( codeLine ) );
 				CodeCheckMessage message = CodeCheckMessage.withHelp( context, e.getMessage(), getHelp( e ) );
 				throw new ModuleException( message );
 			}

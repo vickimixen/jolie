@@ -1952,10 +1952,11 @@ public class OLParser extends AbstractParser {
 		setEndLine();
 		assertToken( Scanner.TokenType.ID, "expected interface name" );
 		name = token.content();
+		ParsingContext interfaceContext = getContext();
 		nextToken();
 		setEndLine(); // remember end line for error
 		eat( Scanner.TokenType.LCURLY, "expected {", name, Keywords.INTERFACE );
-		iface = new InterfaceDefinition( getContext(), name, accessModifier );
+		iface = new InterfaceDefinition( interfaceContext, name, accessModifier );
 		parseOperations( iface );
 		setEndLine(); // remember end line for error
 		eat( Scanner.TokenType.RCURLY, "expected }", name, Keywords.INTERFACE );
@@ -3664,6 +3665,7 @@ public class OLParser extends AbstractParser {
 				nextToken();
 			} else {
 				setEndLine(); // set end line for eventual error
+				context = getContext(); // change the context, such that columns match the imported symbol
 				assertIdentifier( "expected Identifier or * after import" );
 				pathNodes = new ArrayList<>();
 				keepRun = false;

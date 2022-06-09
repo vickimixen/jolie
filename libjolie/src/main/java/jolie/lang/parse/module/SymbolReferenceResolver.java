@@ -410,6 +410,17 @@ public class SymbolReferenceResolver {
 						symbol.get().node().getClass().getSimpleName() ) );
 					return;
 				}
+				// Add interface info to map of map of all symbols
+				if( allSymbolReferences.containsKey( iface.context().source() ) ) {
+					Map< SymbolInfo, List< ParsingContext > > symbolMap =
+						allSymbolReferences.get( iface.context().source() );
+					for( SymbolInfo key : symbolMap.keySet() ) {
+						if( key.name().equals( iface.name() ) ) {
+							List< ParsingContext > symbols = symbolMap.get( key );
+							symbols.add( iface.context() );
+						}
+					}
+				}
 				InterfaceDefinition ifaceDeclFromSymbol = (InterfaceDefinition) symbol.get().node();
 				ifaceDeclFromSymbol.operationsMap().values().forEach( op -> {
 					iface.addOperation( op );
@@ -423,6 +434,17 @@ public class SymbolReferenceResolver {
 			for( AggregationItemInfo aggregationItem : n.aggregationList() ) {
 				if( aggregationItem.interfaceExtender() != null ) {
 					aggregationItem.interfaceExtender().accept( this );
+					// add interface info to map of map of all symbols
+					if( allSymbolReferences.containsKey( aggregationItem.interfaceExtender().context().source() ) ) {
+						Map< SymbolInfo, List< ParsingContext > > symbolMap =
+							allSymbolReferences.get( aggregationItem.interfaceExtender().context().source() );
+						for( SymbolInfo key : symbolMap.keySet() ) {
+							if( key.name().equals( aggregationItem.interfaceExtender().name() ) ) {
+								List< ParsingContext > symbols = symbolMap.get( key );
+								symbols.add( aggregationItem.interfaceExtender().context() );
+							}
+						}
+					}
 				}
 			}
 		}
@@ -440,6 +462,17 @@ public class SymbolReferenceResolver {
 					error( buildSymbolTypeMismatchError( iface, iface.name(), "InterfaceDefinition",
 						symbol.get().node().getClass().getSimpleName() ) );
 					return;
+				}
+				// Add interface info to map of map of all symbols
+				if( allSymbolReferences.containsKey( iface.context().source() ) ) {
+					Map< SymbolInfo, List< ParsingContext > > symbolMap =
+						allSymbolReferences.get( iface.context().source() );
+					for( SymbolInfo key : symbolMap.keySet() ) {
+						if( key.name().equals( iface.name() ) ) {
+							List< ParsingContext > symbols = symbolMap.get( key );
+							symbols.add( iface.context() );
+						}
+					}
 				}
 				InterfaceDefinition ifaceDeclFromSymbol = (InterfaceDefinition) symbol.get().node();
 				ifaceDeclFromSymbol.operationsMap().values().forEach( op -> {
@@ -575,6 +608,16 @@ public class SymbolReferenceResolver {
 
 		@Override
 		public void visit( InterfaceDefinition n ) {
+			// Add interface info to map of map of all symbols
+			if( allSymbolReferences.containsKey( n.context().source() ) ) {
+				Map< SymbolInfo, List< ParsingContext > > symbolMap = allSymbolReferences.get( n.context().source() );
+				for( SymbolInfo key : symbolMap.keySet() ) {
+					if( key.name().equals( n.name() ) ) {
+						List< ParsingContext > symbols = symbolMap.get( key );
+						symbols.add( n.context() );
+					}
+				}
+			}
 			for( OperationDeclaration op : n.operationsMap().values() ) {
 				op.accept( this );
 			}
@@ -606,6 +649,17 @@ public class SymbolReferenceResolver {
 						symbol.get().node().getClass().getSimpleName() ) );
 					return;
 				}
+				// Add interface to map of map of all symbols
+				if( allSymbolReferences.containsKey( iface.context().source() ) ) {
+					Map< SymbolInfo, List< ParsingContext > > symbolMap =
+						allSymbolReferences.get( iface.context().source() );
+					for( SymbolInfo key : symbolMap.keySet() ) {
+						if( key.name().equals( iface.name() ) ) {
+							List< ParsingContext > symbols = symbolMap.get( key );
+							symbols.add( iface.context() );
+						}
+					}
+				}
 				InterfaceDefinition ifaceDeclFromSymbol = (InterfaceDefinition) symbol.get().node();
 				ifaceDeclFromSymbol.operationsMap().values().forEach( op -> {
 					iface.addOperation( op );
@@ -629,6 +683,17 @@ public class SymbolReferenceResolver {
 					error( buildSymbolTypeMismatchError( iface, iface.name(), "InterfaceDefinition",
 						symbol.get().node().getClass().getSimpleName() ) );
 					return;
+				}
+				// Add interface info to map of map of all symbols
+				if( allSymbolReferences.containsKey( iface.context().source() ) ) {
+					Map< SymbolInfo, List< ParsingContext > > symbolMap =
+						allSymbolReferences.get( iface.context().source() );
+					for( SymbolInfo key : symbolMap.keySet() ) {
+						if( key.name().equals( iface.name() ) ) {
+							List< ParsingContext > symbols = symbolMap.get( key );
+							symbols.add( iface.context() );
+						}
+					}
 				}
 				InterfaceDefinition ifaceDeclFromSymbol = (InterfaceDefinition) symbol.get().node();
 				ifaceDeclFromSymbol.operationsMap().values().forEach( op -> {
@@ -775,13 +840,24 @@ public class SymbolReferenceResolver {
 
 	private final Map< URI, ModuleRecord > moduleMap;
 	private final Map< URI, SymbolTable > symbolTables;
+	private final Map< URI, Map< SymbolInfo, List< ParsingContext > > > allSymbolReferences;
 
 	private SymbolReferenceResolver( CrawlerResult moduleMap ) {
 		this.moduleMap = moduleMap.toMap();
 		this.symbolTables = new HashMap<>();
+		this.allSymbolReferences = new HashMap<>();
 		for( ModuleRecord mr : this.moduleMap.values() ) {
 			this.symbolTables.put( mr.uri(), mr.symbolTable() );
+			Map< SymbolInfo, List< ParsingContext > > symbolMap = new HashMap<>();
+			for( SymbolInfo syminfo : mr.symbolTable().symbols() ) {
+				symbolMap.put( syminfo, new ArrayList<>() );
+			}
+			this.allSymbolReferences.put( mr.uri(), symbolMap );
 		}
+	}
+
+	public final Map< URI, Map< SymbolInfo, List< ParsingContext > > > allSymbolReferences() {
+		return allSymbolReferences;
 	}
 
 	/**
@@ -835,6 +911,17 @@ public class SymbolReferenceResolver {
 							importedSymbol.importPath() );
 					}
 					importedSymbol.resolve( targetSymbol.node() );
+					// Adding the imported symbol's info to map of map of all symbols
+					if( allSymbolReferences.containsKey( importedSymbol.context().source() ) ) {
+						Map< SymbolInfo, List< ParsingContext > > symbolMap =
+							allSymbolReferences.get( importedSymbol.context().source() );
+						for( SymbolInfo key : symbolMap.keySet() ) {
+							if( key.name().equals( importedSymbol.name() ) ) {
+								List< ParsingContext > symbols = symbolMap.get( key );
+								symbols.add( importedSymbol.context() );
+							}
+						}
+					}
 				}
 			}
 		}
@@ -857,7 +944,8 @@ public class SymbolReferenceResolver {
 	 * 
 	 * @throws ModuleException if the process is failed
 	 */
-	public static void resolve( CrawlerResult moduleMap ) throws ModuleException {
+	public static Map< URI, Map< SymbolInfo, List< ParsingContext > > > resolve( CrawlerResult moduleMap )
+		throws ModuleException {
 		SymbolReferenceResolver resolver = new SymbolReferenceResolver( moduleMap );
 		try {
 			resolver.resolveExternalSymbols();
@@ -867,6 +955,7 @@ public class SymbolReferenceResolver {
 			throw new ModuleException( message );
 		}
 		resolver.resolveLinkedTypes();
+		return resolver.allSymbolReferences;
 	}
 
 	/**

@@ -3,10 +3,13 @@ package jolie.lang.parse.module;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
+
 import jolie.lang.parse.ParserException;
 import jolie.lang.parse.Scanner;
 import jolie.lang.parse.ast.Program;
+import jolie.lang.parse.context.ParsingContext;
 
 public class Modules {
 	public static class ModuleParsedResult {
@@ -21,9 +24,13 @@ public class Modules {
 		 */
 		private final Map< URI, SymbolTable > symbolTables;
 
-		private ModuleParsedResult( Program mainProgram, Map< URI, SymbolTable > symbolTables ) {
+		private final Map< URI, Map< SymbolInfo, List< ParsingContext > > > allSymbolReferences;
+
+		private ModuleParsedResult( Program mainProgram, Map< URI, SymbolTable > symbolTables,
+			Map< URI, Map< SymbolInfo, List< ParsingContext > > > allSymbolReferences ) {
 			this.mainProgram = mainProgram;
 			this.symbolTables = symbolTables;
+			this.allSymbolReferences = allSymbolReferences;
 		}
 
 		public Program mainProgram() {
@@ -32,6 +39,10 @@ public class Modules {
 
 		public Map< URI, SymbolTable > symbolTables() {
 			return symbolTables;
+		}
+
+		public Map< URI, Map< SymbolInfo, List< ParsingContext > > > allSymbolReferences() {
+			return allSymbolReferences;
 		}
 	}
 
@@ -46,8 +57,12 @@ public class Modules {
 
 		ModuleCrawler.CrawlerResult crawlResult = ModuleCrawler.crawl( mainRecord, configuration, finder );
 
-		SymbolReferenceResolver.resolve( crawlResult );
+		Map< URI, Map< SymbolInfo, List< ParsingContext > > > allSymbolReferences =
+			SymbolReferenceResolver.resolve( crawlResult );
 
-		return new ModuleParsedResult( mainRecord.program(), crawlResult.symbolTables() );
+		ModuleParsedResult result =
+			new ModuleParsedResult( mainRecord.program(), crawlResult.symbolTables(), allSymbolReferences );
+
+		return result;
 	}
 }
